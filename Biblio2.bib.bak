@@ -1,0 +1,14 @@
+@Article{Chmielewski2023,
+  author    = {Adrian E. Chmielewski and Ziling Deng and Daniel Duarte-Ruiz and Parivash Moradifar and Leixin Miao and Yuewei Zhang and Akhil Mauze and Caterina Cocchi and Wolfgang Windl and Nasim Alem},
+  journal   = {{ACS} Applied Materials {\&}amp$\mathsemicolon$ Interfaces},
+  title     = {Al Coordination and Ga Interstitial Stability in a $\upbeta$-(Al$\less$sub$\greater$0.2$\less$/sub$\greater$Ga$\less$sub$\greater$0.8$\less$/sub$\greater$)$\less$sub$\greater$2$\less$/sub$\greater$O$\less$sub$\greater$3$\less$/sub$\greater$ Thin Film},
+  year      = {2023},
+  month     = {feb},
+  number    = {6},
+  pages     = {8601--8608},
+  volume    = {15},
+  doi       = {10.1021/acsami.2c17934},
+  publisher = {American Chemical Society ({ACS})},
+}
+
+@Comment{jabref-meta: databaseType:bibtex;}

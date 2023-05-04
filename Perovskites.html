@@ -1,0 +1,313 @@
+<!DOCTYPE HTML>
+<!--
+	Editorial by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>CV Adrian Chmielewski</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/atom-one-dark-reasonable.min.css">
+		<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+
+	</head>
+	<body class="is-preload">
+
+		<!-- Wrapper -->
+			<div id="wrapper">
+
+				<!-- Main -->
+					<div id="main">
+						<div class="inner">
+
+							<!-- Header -->
+							<header id="header">
+								<ul class="icons">
+									<li><a href="https://github.com/Adrian-Chm" class="icon brands fa-github"><span class="label">Github</span></a></li>
+									<li><a href="https://www.linkedin.com/in/adrian-e-chmielewski/" class="icon brands fa-linkedin"><span class="label">LinkedIn</span></a></li>
+								</ul>
+							</header>
+
+							<!-- Content -->
+								<section>
+									<header class="main">
+										<h1>HRSTEM images characterization</h1>
+									</header>
+									<div style="text-align: center;">
+									<span class="image main"><img src="images/Polarization.png" alt="" style="width: 50%;"/></span>
+									</div>
+
+									<p>In this project, we have used multiple Python libraries to do a full analysis of High Resolution Scanning Transmission Electron Microscope (HRSTEM)
+										 images of LSMO/STO Perovskites. Here is a snippet of the code used to plot the data:</p><br>
+										 <!-- Preformatted Code -->
+										 <h4>Actions</h4>
+										<ul class="actions">
+										<li><a href="#" class="button primary" id="showCodeButton" onclick="toggleCode(event)">Show Code</a></li>
+										</ul>
+										<div id="codeSection" style="display:none;">
+											<h3>Preformatted</h3>
+											<pre><code class="python">
+import numpy as np
+from matplotlib_scalebar.scalebar import ScaleBar
+import math
+from scipy.spatial.distance import pdist, squareform
+from matplotlib import pyplot as plt
+from matplotlib.collections import LineCollection
+import hyperspy.api as hs
+from matplotlib.colors import Normalize
+from matplotlib.cm import ScalarMappable
+
+# Load data
+s = hs.load(r'D:/PostDoc CEMES/Manip/BePOLAR/20221215 - JWF4 110 +2.5mm/STO bulk - LSMO/30-31/Cophus corrected cropped.dm3')
+X = np.loadtxt(r'D:/PostDoc CEMES/Manip/BePOLAR/20221215 - JWF4 110 +2.5mm/STO bulk - LSMO/30-31/atom A positions.txt')
+
+def distance_plot(k, Calibration, color, thresh_max, thresh_min):
+	"""
+	This function will display all the atoms in a HRSTEM image and connect them with colored lines.
+	
+	Parameters
+	----------
+	k : int, number of neighbors, the first neigbor is the atom itself, so put 2 to have at least one connexion to a nearest
+		neighbor.
+	Calibration : float, in nanometer. For your image calibration.
+	color : chose a color out of matplotlib.colors.ListedColormap
+	thresh_max: float, maximum distance threshold that will be displayed on the image (in pm)
+	thresh_min: float, minimum distance threshold that will be displayed on the image (in pm)
+	
+	Examples
+	----------
+	distance_plot(k=5, Calibration=0.010863, color='magma',thresh_max=417, thresh_min=350)
+	
+	"""
+	
+	# Colormap
+	cmap=plt.get_cmap(color)
+
+	# Number of atoms in the data
+	N=len(X)
+
+	# Calculate pairwise Euclidean distances
+	distmat = squareform(pdist(X, 'euclidean'))
+
+	# Function for calculating distance between two points
+	def dist(x1, y1, x2, y2):
+		return math.sqrt((x2-x1)**2 + (y2-y1)**2)
+
+	# Select the kNN for each datapoint
+	neighbors = np.sort(np.argsort(distmat, axis=1)[:, 0:k])
+
+	# Get edge coordinates and distance
+	coordinates = np.zeros((N, k, 2, 2))
+	distance = []
+
+	for i in np.arange(N):
+		for j in np.arange(k):
+			coordinates[i, j, :, 0] = np.array([X[i,:][0], X[neighbors[i, j], :][0]])
+			coordinates[i, j, :, 1] = np.array([X[i,:][1], X[neighbors[i, j], :][1]])
+			distance.append(dist(coordinates[i][j][0][0], coordinates[i][j][0][1], coordinates[i][j][1][0], coordinates[i][j][1][1]))
+
+	# Threshold to keep only coordinates below a certain value
+	coordinates = coordinates.tolist()
+	new_coordinates = []
+
+	fig, ax = plt.subplots(1, 1)
+
+	for i in np.arange(len(coordinates)):
+		for j in np.arange(k):
+			if dist(coordinates[i][j][0][0], coordinates[i][j][0][1], coordinates[i][j][1][0], coordinates[i][j][1][1]) > thresh_max/(Calibration*1000):
+				new_coordinates.append(coordinates[i][j])
+				distance.remove(dist(coordinates[i][j][0][0], coordinates[i][j][0][1], coordinates[i][j][1][0], coordinates[i][j][1][1]))
+			if dist(coordinates[i][j][0][0], coordinates[i][j][0][1], coordinates[i][j][1][0], coordinates[i][j][1][1]) < thresh_min/(Calibration*1000):
+				new_coordinates.append(coordinates[i][j])
+				distance.remove(dist(coordinates[i][j][0][0], coordinates[i][j][0][1], coordinates[i][j][1][0], coordinates[i][j][1][1]))
+
+	distance = [i*Calibration*1000 for i in distance]
+	new_coordinates = np.round_(new_coordinates, decimals=8)
+	new_coordinates = new_coordinates.tolist()
+	coordinates = np.asarray(coordinates)
+	
+	#Plotting
+	
+	norm = Normalize(vmin=thresh_min, vmax=thresh_max)
+	line_colors = cmap(norm(distance))
+	coco = coordinates.reshape((N*k, 2, 2)).tolist()
+	coco = np.round_(coco, decimals=8)
+	coco = coco.tolist()
+	result = np.array([position for position in coco if position not in new_coordinates])
+	
+	lines = LineCollection(result, linewidth=3, colors=line_colors)
+	
+	ax.scatter(X[:, 0], X[:, 1], c='black', s=5)
+	
+	ax.add_collection(lines)
+	
+	mappable = ScalarMappable(cmap=cmap, norm=norm)
+	cb = fig.colorbar(mappable)
+	cb.set_label('Distance (pm)')
+	lines.set_clim(vmin=thresh_min, vmax=thresh_max)
+	scalebar = ScaleBar(Calibration*1000, 'pm', location=4)
+	plt.gca().add_artist(scalebar)
+	
+	plt.imshow(s, cmap="gray")
+	plt.sci(lines)
+	plt.show()
+											</code></pre>
+										  </div>
+										  <iframe src="https://nbviewer.jupyter.org/github/Adrian-Chm/HRSTEM-Analysis/blob/main/HRSTEM-analysis.ipynb" width="100%" height="600px" frameborder="0"></iframe>
+
+
+
+									<hr class="major" />
+
+									<h2>Interdum sed dapibus</h2>
+									<p>Donec eget ex magna. Interdum et malesuada fames ac ante ipsum primis in faucibus. Pellentesque venenatis dolor imperdiet dolor mattis sagittis. Praesent rutrum sem diam, vitae egestas enim auctor sit amet. Pellentesque leo mauris, consectetur id ipsum sit amet, fergiat. Pellentesque in mi eu massa lacinia malesuada et a elit. Donec urna ex, lacinia in purus ac, pretium pulvinar mauris. Curabitur sapien risus, commodo eget turpis at, elementum convallis elit. Pellentesque enim turpis, hendrerit.</p>
+									<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis dapibus rutrum facilisis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Etiam tristique libero eu nibh porttitor fermentum. Nullam venenatis erat id vehicula viverra. Nunc ultrices eros ut ultricies condimentum. Mauris risus lacus, blandit sit amet venenatis non, bibendum vitae dolor. Nunc lorem mauris, fringilla in aliquam at, euismod in lectus. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. In non lorem sit amet elit placerat maximus. Pellentesque aliquam maximus risus, vel sed vehicula. Interdum et malesuada fames ac ante ipsum primis in faucibus. Pellentesque venenatis dolor imperdiet dolor mattis sagittis. Praesent rutrum sem diam, vitae egestas enim auctor sit amet. Pellentesque leo mauris, consectetur id ipsum sit amet, fersapien risus, commodo eget turpis at, elementum convallis elit. Pellentesque enim turpis, hendrerit tristique lorem ipsum dolor.</p>
+
+									
+
+								</section>
+
+						</div>
+					</div>
+
+				<!-- Sidebar -->
+				<div id="sidebar">
+					<div class="inner">
+
+						<!-- Search
+							<section id="search" class="alt">
+								<form method="post" action="#">
+									<input type="text" name="query" id="query" placeholder="Search" />
+								</form>
+							</section>-->
+
+						<!-- Menu -->
+							<nav id="menu">
+								<header class="major">
+									<h2>Menu</h2>
+								</header>
+								<ul>
+									<li><a href="index.html">Homepage</a></li>
+									<!--<li><a href="generic.html">Generic</a></li>
+									<li><a href="elements.html">Elements</a></li>-->
+									<li>
+										<span class="opener">Python Projects</span>
+										<ul>
+											<li><a href="NBA.html">NBA Shot Success Prediction</a></li>
+											<li><a href="Referendum.html">Referendum</a></li>
+											<li><a href="Perovskites.html">Polorization in Perovskites</a></li>
+											<li><a href="Satellites.html">Satellites images related project</a></li>
+											<li><a href="NAM.html">Audio related project</a></li>
+											<li><a href="EELS.html">EELS Data Analysis</a></li>
+										</ul>
+									</li>
+									<li><a href="index.html#publications">Publications</a></li>
+								</ul>
+							</nav>
+
+						<!-- Section -->
+						<section>
+							<header class="major">
+								<h2>Get in touch</h2>
+							</header>
+							<p>You can contact me using: </p>
+							<ul class="contact">
+								<li class="icon solid fa-envelope"><a href="#">adrian.chmielewski@orange.fr</a></li>
+								<li class="icon brands fa-github"><a href="https://github.com/Adrian-Chm">https://github.com/Adrian-Chm</a></li>
+								<li class="icon brands fa-linkedin"><a href="https://www.linkedin.com/in/adrian-e-chmielewski/">https://www.linkedin.com/in/adrian-e-chmielewski/</a></li>
+							</ul>
+						</section>
+
+						<!-- Footer -->
+							<footer id="footer">
+								<p class="copyright">&copy; Untitled. All rights reserved. Design: <a href="https://html5up.net">HTML5 UP</a>.</p>
+							</footer>
+
+					</div>
+				</div>
+
+		</div>
+
+	<!-- Scripts -->
+		<script src="assets/js/jquery.min.js"></script>
+		<script src="assets/js/browser.min.js"></script>
+		<script src="assets/js/breakpoints.min.js"></script>
+		<script src="assets/js/util.js"></script>
+		<script src="assets/js/main.js"></script>
+		<script>
+			function toggleCode() {
+			  const codeSection = document.getElementById("codeSection");
+			  const showCodeButton = document.getElementById("showCodeButton");
+		  
+			  if (codeSection.style.display === "none") {
+				codeSection.style.display = "block";
+				showCodeButton.innerHTML = "Hide Code";
+			  } else {
+				codeSection.style.display = "none";
+				showCodeButton.innerHTML = "Show Code";
+			  }
+			}
+		  </script>
+		<script src="https://unpkg.com/@citation-js/core@0.5.4/dist/citation.core.min.js"></script>
+		<script src="https://unpkg.com/@citation-js/plugin-bibtex@0.5.1/dist/citation.plugin.bibtex.min.js"></script>
+		<script>
+			function parseBibtex(bibtex) {
+			  const regex = /@(\w+)\{([^,]+),([^]+?)\n\}/g;
+			  const publications = [];
+			  let match;
+		  
+			  while ((match = regex.exec(bibtex)) !== null) {
+				const entryType = match[1];
+				const citationKey = match[2];
+				const content = match[3];
+		  
+				const fields = content.match(/(\w+)\s*=\s*\{([^\}]+)\}/g);
+				const entry = { type: entryType, key: citationKey, fields: {} };
+		  
+				fields.forEach((field) => {
+				  const [key, value] = field.split(/\s*=\s*\{/);
+				  entry.fields[key] = value.slice(0, -1);
+				});
+		  
+				publications.push(entry);
+			  }
+		  
+			  return publications;
+			}
+		  
+			function displayPublications(publications) {
+const container = document.getElementById('publications');
+const list = document.createElement('ul');
+
+publications.forEach((pub) => {
+const listItem = document.createElement('li');
+const anchor = document.createElement('a');
+
+anchor.href = `https://doi.org/${pub.fields.doi}`;
+anchor.target = '_blank'; // This line makes the link open in a new tab
+anchor.textContent = `${pub.fields.author} (${pub.fields.year}). ${pub.fields.title}. ${pub.fields.journal}, ${pub.fields.volume}(${pub.fields.number}), ${pub.fields.pages}.`;
+
+listItem.appendChild(anchor);
+list.appendChild(listItem);
+});
+
+container.appendChild(list);
+}
+		  
+			fetch('Biblio2.bib')
+			  .then((response) => response.text())
+			  .then((bibtex) => {
+				const publications = parseBibtex(bibtex);
+				displayPublications(publications);
+			  })
+			  .catch((error) => {
+				console.error('Error fetching the BibTeX file:', error);
+			  });
+		  </script>
+				  
+
+</body>
+</html>
