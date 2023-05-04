@@ -2267,4 +2267,22 @@ button,
   font-weight: 900;
 }
 
+.adrian-image {
+  width: 50%;
+  height: auto;
+  max-width: 500px;
+  object-fit: contain;
+}
+
+@media (max-width: 768px) {
+  .adrian-image {
+    max-width: 300px;
+  }
+}
+
+@media (max-width: 480px) {
+  .adrian-image {
+    max-width: 200px;
+  }
+}
 
