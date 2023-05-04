@@ -2268,14 +2268,20 @@ button,
 }
 
 .adrian-image {
-  max-width: 50%;
-  height: 50%;
+  width: 100%;
+  height: auto;
+  max-width: 250px;
 }
 
-
-@media screen and (max-width: 767px) {
+@media (max-width: 768px) {
   .adrian-image {
-    max-width: 50%;
-    max-height: 50%;
+    max-width: 150px;
   }
 }
+
+@media (max-width: 480px) {
+  .adrian-image {
+    max-width: 100px;
+  }
+}
+
