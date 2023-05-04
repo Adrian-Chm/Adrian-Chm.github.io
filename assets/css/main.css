@@ -2268,21 +2268,24 @@ button,
 }
 
 .adrian-image {
-  width: 50%;
+  width: auto;
   height: auto;
-  max-width: 500px;
+  max-width: 200px; /* Adjust this value to desired max width */
+  max-height: 300px; /* Adjust this value to desired max height */
   object-fit: contain;
 }
 
 @media (max-width: 768px) {
   .adrian-image {
-    max-width: 300px;
+    max-width: 150px;
+    max-height: 200px;
   }
 }
 
 @media (max-width: 480px) {
   .adrian-image {
-    max-width: 200px;
+    max-width: 100px;
+    max-height: 133px;
   }
 }
 
