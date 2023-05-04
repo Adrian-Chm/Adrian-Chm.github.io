@@ -2292,7 +2292,7 @@ button,
 
 @media (max-width: 480px) {
   .adrian-image {
-    max-width: 100px;
+    max-width: 80px;
     max-height: 133px;
   }
 }
